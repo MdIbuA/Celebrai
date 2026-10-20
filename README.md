@@ -6,6 +6,8 @@ A GenAI-assisted planner for weddings, birthdays, engagements, college events an
 
 It is a planning tool, not a chatbot. The conversation is the input; the output is a dashboard you work from.
 
+**Live app: [mdibua.github.io/Celebrai](https://mdibua.github.io/Celebrai/)** — runs fully in demo mode, no setup, no sign-in.
+
 - **Challenge:** Challenge 5 — Celebration & Event Planner
 - **Vertical:** Consumer / social event planning, India-first (INR, Indian-locale formatting, Indian event categories)
 - **Stack:** HTML5, CSS3, vanilla JavaScript ES modules. Zero runtime dependencies.
@@ -151,9 +153,11 @@ Date changes shift every deadline by the same delta and report how many tasks be
 
 **Requirement:** Node.js ≥ 18 (only for the test runner and the optional server — the app itself needs nothing).
 
+The quickest look is the hosted build: **https://mdibua.github.io/Celebrai/**. To run it locally:
+
 ```bash
-git clone <repo-url>
-cd celebrai
+git clone https://github.com/MdIbuA/Celebrai.git
+cd Celebrai
 npm test            # 86 unit tests, no install step, no dependencies
 node server/proxy.js   # http://localhost:4173
 ```
@@ -258,14 +262,24 @@ This boots the real `index.html` + `app.js` against a DOM and drives the whole j
 
 It is kept out of `npm test` deliberately: the brief asks for lightweight tests without unnecessary dependencies, and jsdom is a 50-package install. It skips cleanly with an explanatory message if jsdom is absent.
 
-### What has not been tested
+### Browser verification, and what the automated tests missed
 
-The app has **not** been opened in a real browser. No Chromium or Firefox binary was available in the build environment, so there is no visual confirmation, no screenshots, and no verification of real-browser rendering, CSS layout at actual breakpoints, or `prefers-color-scheme` behaviour. jsdom does not do layout or paint. Everything in §10 about responsiveness and theming is implemented and reviewed in code, not observed. Treat it as such until you run it yourself.
+No Chromium or Firefox binary existed in the build environment, so the app was written and tested entirely headlessly. jsdom does no layout and no paint.
+
+It has since been opened on a real device — Chrome on Android, dark mode, against the hosted build — and that single look found a bug that 86 unit tests and 44 smoke checks had all passed straight through:
+
+> `.modal { display: grid }` overrides the user-agent rule behind the `hidden` attribute, so the dialog panel and its page-dimming backdrop were painted over the entire application from first load.
+
+Fixed in `a54dc6c` with a global `[hidden] { display: none !important }` rule. The accompanying regression check is a source-level assertion, not a computed-style one, because jsdom's cascade does not reproduce the bug — a `getComputedStyle` assertion passed against the broken stylesheet and would have been false confidence. The replacement was verified to fail without the fix.
+
+Worth stating plainly, since it is the honest lesson of this build: **a fully green test suite told us nothing about whether the thing rendered.** Logic coverage and visual correctness are different properties, and only one of them was automated here.
+
+Still unverified: iOS/Safari, light mode on a real device, measured contrast ratios, and screen-reader behaviour.
 
 ## 12. Known limitations
 
-1. **Not visually verified.** See above. This is the largest gap.
-2. **No screenshots**, for the same reason. Fabricating them would be worse than omitting them.
+1. **Thinly visually verified.** One device, one browser, one theme (Chrome on Android, dark mode). iOS/Safari, desktop light mode and real contrast measurements are unchecked. See §11.
+2. **No screenshots in the repo.** The hosted build is linked at the top instead; fabricating screenshots would undermine the point.
 3. **No real vendor data.** By design, but it means the vendor module is a disciplined notebook, not a marketplace.
 4. **Demo mode does not read free text.** It uses structured fields and keyword checks only.
 5. **LocalStorage only.** Single browser, single device. Clearing site data loses everything not exported. No multi-user or sharing.
@@ -297,7 +311,9 @@ The app has **not** been opened in a real browser. No Chromium or Firefox binary
 
 ## 15. Screenshots
 
-None. No browser was available in the build environment, and inventing them would undermine the point of the honesty constraints this project is built around. Run `node server/proxy.js` and open `http://localhost:4173` to see it.
+None committed. The app is hosted and takes no setup to try, so a live link beats a static image: **https://mdibua.github.io/Celebrai/**
+
+It opens on the event-creation form. Fill it in and the overview, budget breakdown, timeline and vendor checklist all populate immediately — no key, no sign-in, no backend.
 
 ---
 
@@ -305,7 +321,7 @@ None. No browser was available in the build environment, and inventing them woul
 
 | Check | Status |
 |---|---|
-| Application launches | Verified headlessly (44/44 smoke checks); not visually verified in a browser |
+| Application launches | Verified headlessly (44/44 smoke checks) and on a real device (Chrome/Android) |
 | Event creation with validation | Verified |
 | Plan generated in demo mode | Verified, labelled `source: 'demo'` |
 | Budget calculations correct | Verified — 86 unit tests, three invariants |
