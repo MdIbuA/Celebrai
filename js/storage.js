@@ -140,7 +140,9 @@ export function saveState(state, store = resolveStore()) {
   }
   try {
     store.setItem(STORAGE_KEY, serialised);
-    return { ok: true, message: 'Saved locally.', bytes: serialised.length };
+    // Hand the timestamp back so the caller's in-memory state matches what is
+    // on disk; otherwise the UI reports "not yet saved" forever.
+    return { ok: true, message: 'Saved locally.', bytes: serialised.length, updatedAt: payload.updatedAt };
   } catch (err) {
     const quota = err && (err.name === 'QuotaExceededError' || err.code === 22 || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
     return {

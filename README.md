@@ -311,8 +311,32 @@ Still unverified: iOS/Safari, light mode on a real device, measured contrast rat
 
 ## 15. Screenshots
 
-None committed. The app is hosted and takes no setup to try, so a live link beats a static image: **https://mdibua.github.io/Celebrai/**
+Captured from the hosted build on Chrome for Android, dark mode. The run shown is a deliberately awkward one — a 600-guest community gathering on a ₹60,000 budget with two days' notice — because that is where the product's behaviour is visible.
 
-It opens on the event-creation form. Fill it in and the overview, budget breakdown, timeline and vendor checklist all populate immediately — no key, no sign-in, no backend.
+**Event creation**
+
+![Event creation form with validated fields for date, city, guest count, budget, reserve, and cultural, dietary, accessibility and non-negotiable requirements](docs/01-create-event.png)
+
+**AI planning workspace** — note the demo banner, which is rendered from the plan object's own `source` field rather than added by the view, and the budget table showing the model's *weights* beside rupee figures CelebrAI computed itself.
+
+![AI planning workspace showing a demo-output banner, event summary, planning assumptions and a budget allocation table with weights and allocated amounts](docs/02-ai-plan.png)
+
+**Budget** — the reconciliation line reads `Allocated ₹54,000 + reserve ₹6,000 + unallocated ₹0 = ₹60,000`. That line is printed from the live summary, so it cannot drift from the table beneath it.
+
+![Budget view with replanning controls and a category allocation table showing allocated, estimated, actual and variance columns](docs/03-budget.png)
+
+**Timeline** — short-notice mode has compressed every lead time into the two days available, and nine tasks show as blocked because their dependencies are incomplete. Blocking is derived, not stored, so completing a dependency clears it.
+
+![Timeline view in short-notice mode showing 13 tasks, 9 blocked, with deadlines, priorities and the dependency blocking each one](docs/04-timeline.png)
+
+**Vendors** — the empty state leads with what the app cannot do.
+
+![Vendors view with a notice stating CelebrAI has no vendor directory or availability feed, and counters for records, shortlisted, booked and unverified](docs/05-vendors.png)
+
+**Settings** — including the explanation of why there is no API-key field.
+
+![Settings view explaining that a browser cannot keep an API key secret, with an endpoint field, export and import controls, and a list of what CelebrAI does not do](docs/06-settings.png)
+
+Live app, no setup required: **https://mdibua.github.io/Celebrai/**
 
 Licence: MIT.

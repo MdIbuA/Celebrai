@@ -41,7 +41,8 @@ function update(patch, { save = true, rerender = true } = {}) {
   state = { ...state, ...patch };
   if (save) {
     const res = saveState(state);
-    if (!res.ok) toast(res.message, res.quota ? 'warn' : 'danger', { timeout: 8000 });
+    if (res.ok) state.updatedAt = res.updatedAt;
+    else toast(res.message, res.quota ? 'warn' : 'danger', { timeout: 8000 });
   }
   if (rerender) render();
 }
@@ -69,6 +70,10 @@ function derive() {
 
 function setView(view) {
   if (!VIEWS.includes(view)) view = 'overview';
+  // Every other view is meaningless without an event, and render() forces the
+  // creation form anyway — so redirect here, or the nav highlights a section
+  // the user is not actually looking at.
+  if (!state.event) view = 'create';
   currentView = view;
   for (const v of VIEWS) {
     const node = document.getElementById(`view-${v}`);

@@ -253,6 +253,9 @@ check('booking it converts the estimate into actual spend',
 check('budget still reconciles after every replan', api.derive().summary.reconciles);
 
 /* --- persistence --- */
+check('in-memory state records when it was last saved',
+  typeof api.getState().updatedAt === 'string' && !Number.isNaN(Date.parse(api.getState().updatedAt)),
+  `updatedAt was ${JSON.stringify(api.getState().updatedAt)}`);
 check('state is written to localStorage', Boolean(mem.get('celebrai.state.v1')));
 const saved = JSON.parse(mem.get('celebrai.state.v1'));
 check('saved payload carries the schema version', saved.schemaVersion === 1);
@@ -261,6 +264,8 @@ check('saved payload keeps the user budget', saved.budget.totalBudgetPaise === 8
 /* --- export --- */
 api.setView('settings');
 await tick();
+check('settings reports a real save time rather than "not yet"',
+  !document.getElementById('settingsBody').textContent.includes('Last saved: not yet'));
 let exported = null;
 const realBlob = window.Blob;
 globalThis.Blob = class extends realBlob {
