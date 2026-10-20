@@ -79,14 +79,23 @@ export function scalePaise(paise, ratio) {
 /**
  * Split `totalPaise` across weighted buckets so the parts sum EXACTLY to the
  * total. Uses the largest-remainder (Hamilton) method: floor every share, then
- * hand the leftover paise to the buckets with the largest fractional parts.
+ * hand the leftover units to the buckets with the largest fractional parts.
+ *
+ * `grain` is the smallest unit a bucket may be given, in paise. The default of
+ * 100 allocates whole rupees, because "₹2,30,679.61 for catering" is noise on a
+ * planning dashboard. If the total is not a whole multiple of the grain, the
+ * sub-grain remainder is added to the largest bucket so the sum stays exact.
  *
  * @param {number} totalPaise
  * @param {Array<{key: string, weight: number}>} weights
+ * @param {{grain?: number}} [opts]
  * @returns {Record<string, number>} key -> paise
  */
-export function allocateByWeight(totalPaise, weights) {
+export function allocateByWeight(totalPaise, weights, { grain = 100 } = {}) {
   assertPaise(totalPaise);
+  if (!Number.isInteger(grain) || grain < 1) {
+    throw new MoneyError(`Grain must be a positive integer number of paise: ${String(grain)}`);
+  }
   if (!Array.isArray(weights) || weights.length === 0) {
     throw new MoneyError('At least one weighted bucket is required');
   }
@@ -105,26 +114,41 @@ export function allocateByWeight(totalPaise, weights) {
   const result = {};
   if (totalWeight === 0) {
     for (const w of cleaned) result[w.key] = 0;
+    // Nothing is weighted: the whole amount still has to land somewhere.
+    if (totalPaise !== 0) result[cleaned[0].key] = totalPaise;
     return result;
   }
+
+  const units = Math.floor(totalPaise / grain);
+  const subGrain = totalPaise - units * grain;
 
   const remainders = [];
   let assigned = 0;
   for (const w of cleaned) {
-    const exact = (totalPaise * w.weight) / totalWeight;
+    const exact = (units * w.weight) / totalWeight;
     const floored = Math.floor(exact);
     result[w.key] = floored;
     assigned += floored;
     remainders.push({ key: w.key, frac: exact - floored });
   }
 
-  let leftover = totalPaise - assigned;
+  let leftover = units - assigned;
   remainders.sort((a, b) => b.frac - a.frac || a.key.localeCompare(b.key));
   let i = 0;
   while (leftover > 0 && remainders.length > 0) {
     result[remainders[i % remainders.length].key] += 1;
     leftover -= 1;
     i += 1;
+  }
+
+  for (const key of Object.keys(result)) result[key] *= grain;
+
+  if (subGrain > 0) {
+    // Deterministic home for the odd paise: the largest bucket, ties by key.
+    const biggest = cleaned
+      .slice()
+      .sort((a, b) => result[b.key] - result[a.key] || a.key.localeCompare(b.key))[0];
+    result[biggest.key] += subGrain;
   }
   return result;
 }

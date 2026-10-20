@@ -56,6 +56,45 @@ describe('money primitives', () => {
     }
   });
 
+  it('allocates on a whole-rupee grain by default', () => {
+    const res = allocateByWeight(toPaise(720000), weddingCats.map((c) => ({ key: c.id, weight: c.weight })));
+    for (const [key, paise] of Object.entries(res)) {
+      assert.equal(paise % 100, 0, `${key} should be a whole number of rupees, got ${paise}`);
+    }
+    assert.equal(Object.values(res).reduce((a, b) => a + b, 0), toPaise(720000));
+  });
+
+  it('parks a sub-rupee remainder deterministically and still reconciles', () => {
+    const total = toPaise(100000) + 37; // 37 stray paise, e.g. from an import
+    const res = allocateByWeight(total, weddingCats.map((c) => ({ key: c.id, weight: c.weight })));
+    assert.equal(Object.values(res).reduce((a, b) => a + b, 0), total);
+    const odd = Object.values(res).filter((p) => p % 100 !== 0);
+    assert.equal(odd.length, 1, 'exactly one bucket carries the stray paise');
+    // Deterministic: same input, same placement.
+    const again = allocateByWeight(total, weddingCats.map((c) => ({ key: c.id, weight: c.weight })));
+    assert.deepEqual(res, again);
+  });
+
+  it('a grain of 1 paisa still reconciles', () => {
+    const res = allocateByWeight(100001, [
+      { key: 'a', weight: 1 }, { key: 'b', weight: 2 },
+    ], { grain: 1 });
+    assert.equal(res.a + res.b, 100001);
+  });
+
+  it('places the whole amount somewhere when every weight is zero', () => {
+    const res = allocateByWeight(toPaise(5000), [{ key: 'a', weight: 0 }, { key: 'b', weight: 0 }]);
+    assert.equal(res.a + res.b, toPaise(5000), 'money is never lost');
+  });
+
+  it('category allocations are whole rupees in a realistic budget', () => {
+    const budget = makeBudget(800000, 10);
+    assert.equal(budget.reservePaise % 100, 0, 'reserve is whole rupees');
+    for (const c of budget.categories) {
+      assert.equal(c.allocatedPaise % 100, 0, `${c.label} shows stray paise`);
+    }
+  });
+
   it('formats INR in Indian locale', () => {
     const s = formatINR(toPaise(500000));
     assert.ok(s.includes('5,00,000'), `expected lakh grouping, got ${s}`);

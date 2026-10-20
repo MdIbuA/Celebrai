@@ -92,7 +92,13 @@ export function createBudget({ totalBudgetPaise, categories, reservePercent = DE
     throw new RangeError('Reserve percent must be between 0 and 50.');
   }
 
-  const reservePaise = Math.round((totalBudgetPaise * reservePercent) / 100);
+  // Keep the reserve on a whole-rupee boundary when the budget itself is whole
+  // rupees, so the allocatable remainder divides cleanly and no category ends
+  // up displaying stray paise.
+  const rawReserve = (totalBudgetPaise * reservePercent) / 100;
+  const reservePaise = totalBudgetPaise % 100 === 0
+    ? Math.round(rawReserve / 100) * 100
+    : Math.round(rawReserve);
   const allocatablePaise = totalBudgetPaise - reservePaise;
 
   const shares = allocateByWeight(
@@ -336,7 +342,10 @@ export function projectGuestCountChange(budget, { oldGuestCount, newGuestCount }
 
   for (const c of budget.categories) {
     const sensitive = GUEST_SENSITIVE_CATEGORIES.has(c.id);
-    const projectedPaise = sensitive ? scalePaise(c.allocatedPaise, ratio) : c.allocatedPaise;
+    // Projections are shown to the user, so keep them on whole rupees.
+    const projectedPaise = sensitive
+      ? Math.round(scalePaise(c.allocatedPaise, ratio) / 100) * 100
+      : c.allocatedPaise;
     projectedTotal += projectedPaise;
     if (sensitive && projectedPaise !== c.allocatedPaise) {
       impacts.push({
