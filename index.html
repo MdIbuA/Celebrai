@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CelebrAI — Celebration &amp; Event Planner</title>
+<meta name="description" content="CelebrAI plans weddings, birthdays, engagements, college events and community celebrations with a deterministic budget engine and an AI planning assistant." />
+<meta name="color-scheme" content="light dark" />
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ───────────────────────── Sidebar ───────────────────────── -->
+  <header class="sidebar">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">✦</span>
+      <div class="brand__text">
+        <span class="brand__name">CelebrAI</span>
+        <span class="brand__tagline">Big celebrations. Smart planning.<br />Zero budget surprises.</span>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Sections">
+      <ul class="nav__list" id="navList">
+        <li><button class="nav__item is-active" data-view="overview" aria-current="page"><span class="nav__icon" aria-hidden="true">◧</span><span>Overview</span></button></li>
+        <li><button class="nav__item" data-view="plan"><span class="nav__icon" aria-hidden="true">✦</span><span>AI Plan</span></button></li>
+        <li><button class="nav__item" data-view="budget"><span class="nav__icon" aria-hidden="true">₹</span><span>Budget</span></button></li>
+        <li><button class="nav__item" data-view="timeline"><span class="nav__icon" aria-hidden="true">◴</span><span>Timeline</span></button></li>
+        <li><button class="nav__item" data-view="vendors"><span class="nav__icon" aria-hidden="true">◈</span><span>Vendors</span></button></li>
+        <li><button class="nav__item" data-view="settings"><span class="nav__icon" aria-hidden="true">⚙</span><span>Settings</span></button></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar__footer">
+      <p class="mode-badge" id="modeBadge" data-mode="demo">
+        <span class="mode-badge__dot" aria-hidden="true"></span>
+        <span id="modeBadgeText">Demo mode — no AI provider configured</span>
+      </p>
+    </div>
+  </header>
+
+  <!-- ───────────────────────── Main ───────────────────────── -->
+  <main class="main" id="main" tabindex="-1">
+
+    <!-- Event creation / edit -->
+    <section class="view" id="view-create" hidden>
+      <div class="view__head">
+        <h1 class="view__title">Create your event</h1>
+        <p class="view__sub">Everything below feeds the budget and timeline engines. Nothing here is sent anywhere except the planning service you configure yourself.</p>
+      </div>
+
+      <form class="card form" id="eventForm" novalidate>
+        <div class="form__grid">
+          <div class="field">
+            <label for="f-name">Event name <span class="req" aria-hidden="true">*</span></label>
+            <input id="f-name" name="name" type="text" required autocomplete="off" aria-describedby="e-name" maxlength="160" />
+            <p class="field__error" id="e-name" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-category">Event category <span class="req" aria-hidden="true">*</span></label>
+            <select id="f-category" name="category" required aria-describedby="e-category">
+              <option value="">Choose…</option>
+              <option value="wedding">Wedding</option>
+              <option value="birthday">Birthday</option>
+              <option value="engagement">Engagement</option>
+              <option value="college">College Event</option>
+              <option value="community">Community Gathering</option>
+            </select>
+            <p class="field__error" id="e-category" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-date">Event date <span class="req" aria-hidden="true">*</span></label>
+            <input id="f-date" name="date" type="date" required aria-describedby="e-date" />
+            <p class="field__error" id="e-date" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-location">City or location <span class="req" aria-hidden="true">*</span></label>
+            <input id="f-location" name="location" type="text" required autocomplete="off" aria-describedby="e-location" maxlength="160" />
+            <p class="field__error" id="e-location" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-guests">Guest count <span class="req" aria-hidden="true">*</span></label>
+            <input id="f-guests" name="guestCount" type="number" min="0" step="1" required inputmode="numeric" aria-describedby="e-guests" />
+            <p class="field__error" id="e-guests" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-budget">Total budget (₹) <span class="req" aria-hidden="true">*</span></label>
+            <input id="f-budget" name="budget" type="number" min="1" step="1" required inputmode="decimal" aria-describedby="e-budget f-budget-help" />
+            <p class="field__hint" id="f-budget-help">Your hard ceiling. CelebrAI never raises this on its own.</p>
+            <p class="field__error" id="e-budget" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-reserve">Emergency reserve (%)</label>
+            <input id="f-reserve" name="reservePercent" type="number" min="0" max="50" step="1" value="10" aria-describedby="e-reserve f-reserve-help" />
+            <p class="field__hint" id="f-reserve-help">Held back from all categories. 10% is a sane default.</p>
+            <p class="field__error" id="e-reserve" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="f-theme">Preferred theme</label>
+            <input id="f-theme" name="theme" type="text" autocomplete="off" maxlength="160" placeholder="e.g. Traditional temple palette" />
+          </div>
+        </div>
+
+        <fieldset class="fieldset">
+          <legend>Preferences and constraints</legend>
+          <div class="form__grid">
+            <div class="field">
+              <label for="f-cultural">Cultural preferences</label>
+              <textarea id="f-cultural" name="cultural" rows="2" maxlength="2000" placeholder="Rituals, customs, languages, timing conventions"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-dietary">Dietary requirements</label>
+              <textarea id="f-dietary" name="dietary" rows="2" maxlength="2000" placeholder="e.g. halal only, one Jain counter, two nut-free tables"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-accessibility">Accessibility requirements</label>
+              <textarea id="f-accessibility" name="accessibility" rows="2" maxlength="2000" placeholder="e.g. wheelchair ramp, seating for elderly guests"></textarea>
+            </div>
+            <div class="field">
+              <label for="f-nonneg">Non-negotiable requirements</label>
+              <textarea id="f-nonneg" name="nonNegotiables" rows="2" maxlength="2000" placeholder="Things replanning must never trade away"></textarea>
+              <p class="field__hint">These are preserved verbatim through every replan.</p>
+            </div>
+            <div class="field field--wide">
+              <label for="f-optional">Optional preferences</label>
+              <textarea id="f-optional" name="optionalPreferences" rows="2" maxlength="2000" placeholder="Nice to have if the budget allows"></textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="form__warnings" id="formWarnings" role="status" aria-live="polite"></div>
+
+        <div class="form__actions">
+          <button type="submit" class="btn btn--primary" id="createBtn">Create event &amp; build plan</button>
+          <button type="button" class="btn btn--ghost" id="cancelEditBtn" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Overview -->
+    <section class="view" id="view-overview" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title" id="ovTitle">Overview</h1>
+          <p class="view__sub" id="ovSub"></p>
+        </div>
+        <div class="view__actions">
+          <button class="btn btn--ghost" id="editEventBtn">Edit event</button>
+          <button class="btn btn--primary" id="regenBtn">Regenerate plan</button>
+        </div>
+      </div>
+      <div id="ovBody"></div>
+    </section>
+
+    <!-- AI plan -->
+    <section class="view" id="view-plan" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title">AI planning workspace</h1>
+          <p class="view__sub">The assistant proposes structure and priorities. Every rupee on this page is calculated by CelebrAI, not by the model.</p>
+        </div>
+        <div class="view__actions">
+          <button class="btn btn--primary" id="planGenerateBtn">Generate plan</button>
+        </div>
+      </div>
+      <div id="planBody"></div>
+    </section>
+
+    <!-- Budget -->
+    <section class="view" id="view-budget" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title">Budget</h1>
+          <p class="view__sub">Allocated, committed and remaining funds. Totals are computed in integer paise and always reconcile.</p>
+        </div>
+      </div>
+      <div id="budgetBody"></div>
+    </section>
+
+    <!-- Timeline -->
+    <section class="view" id="view-timeline" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title">Timeline</h1>
+          <p class="view__sub">Tasks are generated backwards from the event date. Blocked status is derived from dependencies.</p>
+        </div>
+      </div>
+      <div id="timelineBody"></div>
+    </section>
+
+    <!-- Vendors -->
+    <section class="view" id="view-vendors" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title">Vendors</h1>
+          <p class="view__sub">CelebrAI has no vendor directory. Every suggestion is a category checklist, not a real business, until you confirm one yourself.</p>
+        </div>
+        <div class="view__actions">
+          <button class="btn btn--primary" id="addVendorBtn">Add vendor</button>
+        </div>
+      </div>
+      <div id="vendorsBody"></div>
+    </section>
+
+    <!-- Settings -->
+    <section class="view" id="view-settings" hidden>
+      <div class="view__head">
+        <div>
+          <h1 class="view__title">Settings &amp; data</h1>
+          <p class="view__sub">Your event lives in this browser only. Nothing is uploaded unless you configure a planning service.</p>
+        </div>
+      </div>
+      <div id="settingsBody"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav" aria-label="Sections (compact)">
+  <ul id="mobileNavList">
+    <li><button class="mobile-nav__item is-active" data-view="overview"><span aria-hidden="true">◧</span>Overview</button></li>
+    <li><button class="mobile-nav__item" data-view="plan"><span aria-hidden="true">✦</span>Plan</button></li>
+    <li><button class="mobile-nav__item" data-view="budget"><span aria-hidden="true">₹</span>Budget</button></li>
+    <li><button class="mobile-nav__item" data-view="timeline"><span aria-hidden="true">◴</span>Tasks</button></li>
+    <li><button class="mobile-nav__item" data-view="vendors"><span aria-hidden="true">◈</span>Vendors</button></li>
+  </ul>
+</nav>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<!-- Dialog -->
+<div class="modal" id="modal" hidden>
+  <div class="modal__backdrop" data-close="1"></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 class="modal__title" id="modalTitle">Dialog</h2>
+    <div class="modal__body" id="modalBody"></div>
+    <div class="modal__actions" id="modalActions"></div>
+  </div>
+</div>
+
+<noscript>
+  <p style="padding:2rem;font-family:system-ui">CelebrAI is a client-side application and needs JavaScript enabled.</p>
+</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
