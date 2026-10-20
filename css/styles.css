@@ -82,6 +82,10 @@
 
 * { box-sizing: border-box; }
 
+/* Safety net: any rule that sets `display` silently defeats the hidden
+   attribute, which is how a modal ends up permanently on screen. */
+[hidden] { display: none !important; }
+
 html, body { height: 100%; }
 
 body {
@@ -343,6 +347,8 @@ tbody tr:hover { background: var(--surface-2); }
 
 /* Modal */
 .modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: var(--s4); }
+/* `display` beats the hidden attribute's UA rule, so restate it explicitly. */
+.modal[hidden] { display: none; }
 .modal__backdrop { position: absolute; inset: 0; background: rgba(20, 16, 24, .55); }
 .modal__panel {
   position: relative; background: var(--surface); border-radius: var(--r-lg);

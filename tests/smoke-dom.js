@@ -31,7 +31,12 @@ try {
 }
 
 const html = readFileSync(join(here, '..', 'index.html'), 'utf8');
-const dom = new JSDOM(html, { url: 'https://celebrai.test/', pretendToBeVisual: true });
+// Inline the real stylesheet so computed-style checks exercise the actual CSS.
+const css = readFileSync(join(here, '..', 'css', 'styles.css'), 'utf8');
+const dom = new JSDOM(
+  html.replace('<link rel="stylesheet" href="css/styles.css" />', `<style>${css}</style>`),
+  { url: 'https://celebrai.test/', pretendToBeVisual: true },
+);
 
 // Expose the DOM to the modules, which expect browser globals.
 const { window } = dom;
@@ -73,6 +78,19 @@ check('creation view is shown when there is no saved event',
   !document.getElementById('view-create').hidden);
 check('demo mode is advertised up front',
   document.getElementById('modeBadgeText').textContent.toLowerCase().includes('demo'));
+
+// Regression guard for a real bug: `.modal { display: grid }` overrides the
+// UA rule behind the `hidden` attribute, so the dialog and its page-dimming
+// backdrop rendered permanently over the app.
+//
+// This is a SOURCE check, not a behavioural one. jsdom's cascade does not
+// reproduce the bug — it reports display:none either way — so a computed-style
+// assertion would pass against the broken stylesheet and prove nothing.
+check('stylesheet neutralises `display` rules on hidden elements',
+  /\[hidden\]\s*{[^}]*display:\s*none\s*!important/.test(css),
+  'css/styles.css needs a global [hidden] { display: none !important } rule');
+check('the modal element is marked hidden in the markup',
+  document.getElementById('modal').hasAttribute('hidden'));
 
 /* --- invalid submission is rejected --- */
 const form = document.getElementById('eventForm');
