@@ -315,26 +315,4 @@ None committed. The app is hosted and takes no setup to try, so a live link beat
 
 It opens on the event-creation form. Fill it in and the overview, budget breakdown, timeline and vendor checklist all populate immediately — no key, no sign-in, no backend.
 
----
-
-## Verification checklist
-
-| Check | Status |
-|---|---|
-| Application launches | Verified headlessly (44/44 smoke checks) and on a real device (Chrome/Android) |
-| Event creation with validation | Verified |
-| Plan generated in demo mode | Verified, labelled `source: 'demo'` |
-| Budget calculations correct | Verified — 86 unit tests, three invariants |
-| Budget and guest-count editing | Verified |
-| Replanning recalculates | Verified end-to-end |
-| Timeline task management | Verified |
-| Vendor status changes | Verified |
-| Local persistence | Verified |
-| Export | Verified, output inspected |
-| Validation and error states | Verified |
-| Tests executed | Yes — 86 unit, 0 failures; 44 smoke, 0 failures |
-| No secrets committed | Verified by scan; `.env` gitignored, `.env.example` has empty values |
-| Repository under 10 MB | Yes — under 300 KB |
-| Exactly one branch | Yes — `main` |
-
 Licence: MIT.
